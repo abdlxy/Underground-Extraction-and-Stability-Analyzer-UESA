@@ -26,8 +26,13 @@ st.markdown("""
 st.markdown('<div class="main-title">⛏️ UBC Mining Method Selection Tool</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Advanced evaluation dashboard based on the UBC methodology</div>', unsafe_allow_html=True)
 
-# 3. Create all THREE interactive Tabs
-tab1, tab2, tab3 = st.tabs(["📋 Input Parameters", "📊 Results & Analysis", "🧨 Drill & Blast Design"])
+# 3. Create FOUR interactive Tabs
+tab1, tab2, tab3, tab4 = st.tabs([
+    "📋 Input Parameters", 
+    "📊 Results & Analysis", 
+    "🧨 Drill & Blast Design", 
+    "📳 Vibration Control"
+])
 
 # --- TAB 1: UBC INPUTS ---
 with tab1:
@@ -218,8 +223,7 @@ with tab3:
             "1. Lilly's Blastability Index (BI)",
             "2. Kuz-Ram Fragmentation Model",
             "3. Langefors & Kihlström (Tunnel/Drift Development)",
-            "4. Holmberg-Persson (Contour/Perimeter Blasting)",
-            "5. Ground Vibration Prediction (Scaled Distance & MIC)"
+            "4. Holmberg-Persson (Contour/Perimeter Blasting)"
         ]
     )
     
@@ -314,36 +318,37 @@ with tab3:
             st.metric("Perimeter Burden", f"{p_burden:.2f} m")
             st.metric("Linear Charge Concentration", f"{charge_concentration:.3f} kg/m")
 
-    elif "Vibration" in blast_method:
-        st.markdown("#### Ground Vibration Prediction & Control")
-        st.markdown("Predict Peak Particle Velocity (PPV) and calculate the allowable Maximum Instantaneous Charge (MIC) using the Scaled Distance Model.")
+# --- TAB 4: VIBRATION CONTROL ---
+with tab4:
+    st.markdown("### 📳 Ground Vibration Prediction & Control")
+    st.markdown("Predict Peak Particle Velocity (PPV) and calculate the allowable Maximum Instantaneous Charge (MIC) using the Scaled Distance Model.")
+    
+    col_v1, col_v2 = st.columns(2)
+    with col_v1:
+        st.markdown("**1. Predict Peak Particle Velocity (PPV)**")
+        k_factor = st.number_input("Site Constant (K)", 500, 2500, 1140, help="Typical values: Hard rock = 1140, Sedimentary = 500")
+        alpha = st.number_input("Attenuation Factor (α)", 1.0, 2.5, 1.6, 0.1)
+        dist_to_structure = st.number_input("Distance to Infrastructure (m)", 10.0, 1000.0, 100.0)
+        mic_actual = st.number_input("Charge Mass per Delay (W in kg)", 1.0, 500.0, 100.0)
         
-        col_v1, col_v2 = st.columns(2)
-        with col_v1:
-            st.markdown("**1. Predict Peak Particle Velocity (PPV)**")
-            k_factor = st.number_input("Site Constant (K)", 500, 2500, 1140, help="Typical values: Hard rock = 1140, Sedimentary = 500")
-            alpha = st.number_input("Attenuation Factor (α)", 1.0, 2.5, 1.6, 0.1)
-            dist_to_structure = st.number_input("Distance to Infrastructure (m)", 10.0, 1000.0, 100.0)
-            mic_actual = st.number_input("Charge Mass per Delay (W in kg)", 1.0, 500.0, 100.0)
-            
-            scaled_distance = dist_to_structure / (mic_actual ** 0.5)
-            ppv_predicted = k_factor * (scaled_distance ** -alpha)
-            
-            st.info(f"**Predicted PPV:** {ppv_predicted:.2f} mm/s")
-            
-        with col_v2:
-            st.markdown("**2. Calculate Maximum Allowable Charge (MIC)**")
-            st.markdown("Determine the maximum explosives you can detonate per delay to stay below a vibration limit.")
-            target_ppv = st.number_input("Maximum Allowable PPV (mm/s)", 5.0, 100.0, 25.0)
-            
-            max_mic = (dist_to_structure / ((target_ppv / k_factor) ** (-1 / alpha))) ** 2
-            
-            st.success(f"**Max Charge per Delay (MIC):** {max_mic:.1f} kg")
-            
-        st.divider()
-        st.markdown("""
-        **Vibration Control Strategies (Delay Timing):**
-        * If the **Predicted PPV** exceeds your regulatory limit (e.g., 25 mm/s), you must reduce the charge weight detonating at any single moment.
-        * Use **Electronic Delay Detonators** to separate the blast holes by at least 8 milliseconds.
-        * By splitting a 200 kg blast into two 100 kg blasts separated by a delay, the vibration waves will not overlap, keeping ground vibrations safe and protecting the hanging wall from overbreak.
-        """)
+        scaled_distance = dist_to_structure / (mic_actual ** 0.5)
+        ppv_predicted = k_factor * (scaled_distance ** -alpha)
+        
+        st.info(f"**Predicted PPV:** {ppv_predicted:.2f} mm/s")
+        
+    with col_v2:
+        st.markdown("**2. Calculate Maximum Allowable Charge (MIC)**")
+        st.markdown("Determine the maximum explosives you can detonate per delay to stay below a vibration limit.")
+        target_ppv = st.number_input("Maximum Allowable PPV (mm/s)", 5.0, 100.0, 25.0)
+        
+        max_mic = (dist_to_structure / ((target_ppv / k_factor) ** (-1 / alpha))) ** 2
+        
+        st.success(f"**Max Charge per Delay (MIC):** {max_mic:.1f} kg")
+        
+    st.divider()
+    st.markdown("""
+    **Vibration Control Strategies (Delay Timing):**
+    * If the **Predicted PPV** exceeds your regulatory limit (e.g., 25 mm/s), you must reduce the charge weight detonating at any single moment.
+    * Use **Electronic Delay Detonators** to separate the blast holes by at least 8 milliseconds.
+    * By splitting a 200 kg blast into two 100 kg blasts separated by a delay, the vibration waves will not overlap, keeping ground vibrations safe and protecting the hanging wall from overbreak.
+    """)
