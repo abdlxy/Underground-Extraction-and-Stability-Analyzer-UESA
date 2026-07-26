@@ -1,33 +1,60 @@
 import streamlit as st
 import pandas as pd
 
-# Set up the page
-st.set_page_config(page_title="UBC Mining Method Selector", layout="wide")
-st.title("⛏️ UBC Mining Method Selection Tool")
-st.markdown("Based on the UBC methodology for underground mining method selection.")
+# 1. Set up the page configuration (wide mode)
+st.set_page_config(page_title="UBC Mining Method Selector", layout="wide", page_icon="⛏️")
 
-# --- SIDEBAR: OREBODY CHARACTERISTICS ---
-st.sidebar.header("Orebody Characteristics")
-general_shape = st.sidebar.selectbox("General Shape", ["Massive", "Platty-Tabular", "Irregular"])
-ore_thickness = st.sidebar.selectbox("Ore Thickness", ["Very narrow (< 3 m)", "Narrow (3 - 10 m)", "Intermediate (10 - 30 m)", "Thick (30 - 100 m)", "Very thick (> 100 m)"])
-ore_plunge = st.sidebar.selectbox("Ore Plunge", ["Flat (< 20°)", "Intermediate (20 - 55°)", "Steep (> 55°)"])
-grade_dist = st.sidebar.selectbox("Grade Distribution", ["Uniform", "Gradational", "Erratic"])
-depth = st.sidebar.selectbox("Depth", ["Shallow (0 - 100 m)", "Intermediate (100 - 600 m)", "Deep (> 600 m)"])
+# 2. Inject Custom HTML/CSS for advanced styling
+st.markdown("""
+<style>
+    .main-title {
+        font-size: 2.5rem;
+        color: #E67E22;
+        text-align: center;
+        font-family: 'Arial Black', sans-serif;
+        padding-bottom: 10px;
+    }
+    .sub-title {
+        text-align: center;
+        color: #7F8C8D;
+        margin-bottom: 30px;
+        font-size: 1.2rem;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-# --- SIDEBAR: ROCK MASS RATING (RMR) ---
-st.sidebar.header("Rock Mass Rating (RMR)")
-rmr_ore = st.sidebar.selectbox("RMR (Ore Zone)", ["Very weak (0-20)", "Weak (20-40)", "Moderate (40-60)", "Strong (60-80)", "Very strong (80-100)"])
-rmr_hw = st.sidebar.selectbox("RMR (Hanging Wall)", ["Very weak (0-20)", "Weak (20-40)", "Moderate (40-60)", "Strong (60-80)", "Very strong (80-100)"])
-rmr_fw = st.sidebar.selectbox("RMR (Footwall)", ["Very weak (0-20)", "Weak (20-40)", "Moderate (40-60)", "Strong (60-80)", "Very strong (80-100)"])
+st.markdown('<div class="main-title">⛏️ UBC Mining Method Selection Tool</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">Advanced evaluation dashboard based on the UBC methodology</div>', unsafe_allow_html=True)
 
-# --- SIDEBAR: ROCK SUBSTANCE STRENGTH (RSS) ---
-st.sidebar.header("Rock Substance Strength")
-st.sidebar.markdown("*(Uniaxial Compressive Strength / Principal Stress)*")
-rss_ore = st.sidebar.selectbox("RSS (Ore Zone)", ["Very weak (<5)", "Weak (5-10)", "Medium (10-15)", "Strong (>15)"])
-rss_hw = st.sidebar.selectbox("RSS (Hanging Wall)", ["Very weak (<5)", "Weak (5-10)", "Medium (10-15)", "Strong (>15)"])
-rss_fw = st.sidebar.selectbox("RSS (Footwall)", ["Very weak (<5)", "Weak (5-10)", "Medium (10-15)", "Strong (>15)"])
+# 3. Create interactive Tabs for a cleaner layout
+tab1, tab2 = st.tabs(["📋 Input Parameters", "📊 Results & Analysis"])
+
+with tab1:
+    # 4. Use columns to organize the inputs side-by-side
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("### 🌍 Orebody Characteristics")
+        general_shape = st.selectbox("General Shape", ["Massive", "Platty-Tabular", "Irregular"])
+        ore_thickness = st.selectbox("Ore Thickness", ["Very narrow (< 3 m)", "Narrow (3 - 10 m)", "Intermediate (10 - 30 m)", "Thick (30 - 100 m)", "Very thick (> 100 m)"])
+        ore_plunge = st.selectbox("Ore Plunge", ["Flat (< 20°)", "Intermediate (20 - 55°)", "Steep (> 55°)"])
+        grade_dist = st.selectbox("Grade Distribution", ["Uniform", "Gradational", "Erratic"])
+        depth = st.selectbox("Depth", ["Shallow (0 - 100 m)", "Intermediate (100 - 600 m)", "Deep (> 600 m)"])
+
+    with col2:
+        st.markdown("### 🪨 Rock Mass Rating (RMR)")
+        rmr_ore = st.selectbox("RMR (Ore Zone)", ["Very weak (0-20)", "Weak (20-40)", "Moderate (40-60)", "Strong (60-80)", "Very strong (80-100)"])
+        rmr_hw = st.selectbox("RMR (Hanging Wall)", ["Very weak (0-20)", "Weak (20-40)", "Moderate (40-60)", "Strong (60-80)", "Very strong (80-100)"])
+        rmr_fw = st.selectbox("RMR (Footwall)", ["Very weak (0-20)", "Weak (20-40)", "Moderate (40-60)", "Strong (60-80)", "Very strong (80-100)"])
+
+    with col3:
+        st.markdown("### 🔨 Rock Substance Strength")
+        rss_ore = st.selectbox("RSS (Ore Zone)", ["Very weak (<5)", "Weak (5-10)", "Medium (10-15)", "Strong (>15)"])
+        rss_hw = st.selectbox("RSS (Hanging Wall)", ["Very weak (<5)", "Weak (5-10)", "Medium (10-15)", "Strong (>15)"])
+        rss_fw = st.selectbox("RSS (Footwall)", ["Very weak (<5)", "Weak (5-10)", "Medium (10-15)", "Strong (>15)"])
 
 # --- THE UBC SCORING MATRIX ---
+# (Paste the exact same 'scoring_matrix' dictionary from the previous code here!)
 scoring_matrix = {
     'Block Caving': {
         'Depth': {'Deep (> 600 m)': 3, 'Intermediate (100 - 600 m)': 3, 'Shallow (0 - 100 m)': 2},
@@ -158,12 +185,31 @@ for method, categories in scoring_matrix.items():
     if not excluded:
         results.append({"Mining Method": method, "Score": total_score})
 
-# --- DISPLAY RESULTS ---
-st.write("### Recommended Mining Methods")
-
-if results:
-    df_results = pd.DataFrame(results).sort_values(by="Score", ascending=False).reset_index(drop=True)
-    df_results.index += 1  # Start ranking at 1
-    st.table(df_results)
-else:
-    st.warning("All methods are excluded (-49 penalty hit) based on the current selections.")
+# --- TAB 2: VISUAL RESULTS ---
+with tab2:
+    st.markdown("### Recommendation Ranking")
+    
+    if results:
+        # Sort results
+        df_results = pd.DataFrame(results).sort_values(by="Score", ascending=False).reset_index(drop=True)
+        top_method = df_results.iloc[0]["Mining Method"]
+        top_score = df_results.iloc[0]["Score"]
+        
+        # 5. Highlight the top recommendation distinctly
+        st.success(f"🏆 **Top Recommendation:** {top_method} (Score: {top_score})")
+        
+        col_chart, col_table = st.columns([2, 1])
+        
+        with col_chart:
+            # 6. Add a visual bar chart comparison
+            st.bar_chart(df_results.set_index("Mining Method"), color="#E67E22")
+            
+        with col_table:
+            # 7. Make the dataframe look nicer
+            st.dataframe(
+                df_results.style.highlight_max(subset=['Score'], color='#2ECC71'), 
+                use_container_width=True,
+                hide_index=True
+            )
+    else:
+        st.error("⚠️ All methods are excluded (-49 penalty hit) based on the current selections.")
