@@ -26,12 +26,13 @@ st.markdown("""
 st.markdown('<div class="main-title">⛏️ UBC Mining Method Selection Tool</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Advanced evaluation dashboard based on the UBC methodology</div>', unsafe_allow_html=True)
 
-# 3. Create FOUR interactive Tabs
-tab1, tab2, tab3, tab4 = st.tabs([
+# 3. Create FIVE interactive Tabs
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📋 Input Parameters", 
     "📊 Results & Analysis", 
-    "🧨 Drill & Blast Design", 
-    "📳 Vibration Control"
+    "🧨 Blasting Models", 
+    "📳 Vibration Control",
+    "🎯 Drill Pattern Design"
 ])
 
 # --- TAB 1: UBC INPUTS ---
@@ -213,17 +214,15 @@ with tab2:
     else:
         st.error("⚠️ All methods are excluded (-49 penalty hit) based on the current selections.")
 
-# --- TAB 3: BLAST DESIGN ---
+# --- TAB 3: BLASTING MODELS ---
 with tab3:
-    st.markdown("### 🧨 Advanced Drill & Blast Design")
+    st.markdown("### 🧨 Advanced Blasting Models")
     
     blast_method = st.selectbox(
-        "Select Blasting Design Standard",
+        "Select Blasting Model",
         [
             "1. Lilly's Blastability Index (BI)",
-            "2. Kuz-Ram Fragmentation Model",
-            "3. Langefors & Kihlström (Tunnel/Drift Development)",
-            "4. Holmberg-Persson (Contour/Perimeter Blasting)"
+            "2. Kuz-Ram Fragmentation Model"
         ]
     )
     
@@ -279,45 +278,6 @@ with tab3:
             res_col1.metric("Mean Fragment Size (X50)", f"{mean_frag * 100:.1f} cm")
             res_col2.metric("Powder Factor", f"{pf_volume:.2f} kg/m³")
 
-    elif "Langefors" in blast_method:
-        st.markdown("#### Langefors & Kihlström (Development Blasting)")
-        st.markdown("Empirical design for burn cuts in tunnel development (creating access drives).")
-        
-        col_l1, col_l2 = st.columns(2)
-        with col_l1:
-            hole_diam_mm = st.number_input("Production Hole Diameter (mm)", 30.0, 100.0, 45.0)
-            empty_hole_diam = st.number_input("Empty Relief Hole Diameter (mm)", 50.0, 200.0, 102.0)
-        
-        with col_l2:
-            b1 = 1.5 * empty_hole_diam 
-            max_burden = 0.015 * hole_diam_mm * 1000 
-            spacing = max_burden * 1.2 
-            
-            st.info("#### Initial Cut Geometry")
-            st.metric("1st Square Burden (B1)", f"{b1:.1f} mm")
-            st.metric("Recommended Max Stope Burden", f"{max_burden:.0f} mm")
-            st.metric("Recommended Stope Spacing", f"{spacing:.0f} mm")
-
-    elif "Holmberg" in blast_method:
-        st.markdown("#### Holmberg-Persson (Contour Blasting)")
-        st.markdown("Design smooth-wall perimeter blasting to protect the hanging wall and footwall from damage.")
-        
-        col_h1, col_h2 = st.columns(2)
-        with col_h1:
-            perimeter_diam = st.number_input("Perimeter Hole Diameter (mm)", 30, 100, 45)
-            rock_cond = st.selectbox("Rock Condition", ["Good", "Average", "Poor"])
-            
-        with col_h2:
-            multiplier = 16 if rock_cond == "Good" else (15 if rock_cond == "Average" else 14)
-            p_spacing = (multiplier * perimeter_diam) / 1000 
-            p_burden = p_spacing * 1.25
-            charge_concentration = 90 * ((perimeter_diam/1000)**2) 
-            
-            st.info("#### Contour Design Variables")
-            st.metric("Perimeter Spacing", f"{p_spacing:.2f} m")
-            st.metric("Perimeter Burden", f"{p_burden:.2f} m")
-            st.metric("Linear Charge Concentration", f"{charge_concentration:.3f} kg/m")
-
 # --- TAB 4: VIBRATION CONTROL ---
 with tab4:
     st.markdown("### 📳 Ground Vibration Prediction & Control")
@@ -352,3 +312,50 @@ with tab4:
     * Use **Electronic Delay Detonators** to separate the blast holes by at least 8 milliseconds.
     * By splitting a 200 kg blast into two 100 kg blasts separated by a delay, the vibration waves will not overlap, keeping ground vibrations safe and protecting the hanging wall from overbreak.
     """)
+
+# --- TAB 5: DRILL PATTERN DESIGN ---
+with tab5:
+    st.markdown("### 🎯 Underground Drill Pattern Design")
+    st.markdown("Calculate geometric layouts for both production stoping and development tunneling based on empirical industry standards.")
+    
+    drill_mode = st.radio("Select Drilling Type", ["Production (Ring/Bench Drilling)", "Development (Burn Cut Tunneling)"], horizontal=True)
+    st.divider()
+
+    if "Production" in drill_mode:
+        st.markdown("#### Production Drilling (Stope Ring & Bench Design)")
+        
+        col_d1, col_d2 = st.columns(2)
+        with col_d1:
+            prod_hole_diam = st.number_input("Production Hole Diameter (mm)", 50, 150, 89, step=1, key="prod_hole")
+            burden_ratio = st.slider("Burden-to-Diameter Ratio", 25, 40, 30, help="Hard rock usually requires a tighter ratio (closer to 25), while softer rock allows a wider ratio (closer to 40).")
+            spacing_ratio = st.slider("Spacing-to-Burden Ratio (S/B)", 1.15, 1.50, 1.25, step=0.05)
+            
+        with col_d2:
+            calc_burden = (prod_hole_diam * burden_ratio) / 1000
+            calc_spacing = calc_burden * spacing_ratio
+            max_toe_spacing = calc_burden * 1.5
+            
+            st.success("#### 📐 Recommended Drill Geometry")
+            st.metric("Design Burden", f"{calc_burden:.2f} m")
+            st.metric("Design Spacing", f"{calc_spacing:.2f} m")
+            st.metric("Max Allowable Toe Spacing", f"{max_toe_spacing:.2f} m")
+            
+        st.caption("⚠️ **Toe Spacing Rule:** In ring/fan drilling, the distance between the ends (toes) of the drill holes must never exceed 1.5x the burden, otherwise massive boulders will form.")
+
+    else:
+        st.markdown("#### Development Drilling (Burn Cut Geometry)")
+        
+        col_t1, col_t2 = st.columns(2)
+        with col_t1:
+            dev_hole_diam = st.number_input("Blast Hole Diameter (mm)", 30.0, 60.0, 45.0, step=1.0)
+            empty_hole_diam = st.number_input("Empty Relief Hole Diameter (mm)", 76.0, 152.0, 102.0, step=1.0)
+            
+        with col_t2:
+            b1 = (1.5 * empty_hole_diam) / 1000
+            max_burden = (0.015 * dev_hole_diam)
+            spacing = max_burden * 1.2
+            
+            st.success("#### 📐 Burn Cut Specifications")
+            st.metric("1st Square Burden (Distance from empty hole)", f"{b1:.2f} m")
+            st.metric("Max Production Hole Burden", f"{max_burden:.2f} m")
+            st.metric("Recommended Spacing", f"{spacing:.2f} m")
