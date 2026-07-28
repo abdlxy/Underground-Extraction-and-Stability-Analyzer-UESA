@@ -1,32 +1,43 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Set up the page configuration (wide mode)
-st.set_page_config(page_title="UESA - Underground Extraction & Stability Analyzer", layout="wide", page_icon="⛏️")
+# 1. PAGE CONFIGURATION
+st.set_page_config(page_title="UESA Dashboard", layout="wide", page_icon="⛏️")
 
-# 2. Inject Custom HTML/CSS for advanced styling
+# 2. ADVANCED UI/CSS DESIGN
 st.markdown("""
 <style>
     .main-title {
-        font-size: 2.5rem;
-        color: #E67E22;
+        font-size: 2.8rem;
+        color: #2C3E50;
         text-align: center;
-        font-family: 'Arial Black', sans-serif;
-        padding-bottom: 10px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-weight: 800;
+        padding-top: 10px;
+        padding-bottom: 5px;
     }
     .sub-title {
         text-align: center;
-        color: #7F8C8D;
-        margin-bottom: 30px;
-        font-size: 1.2rem;
+        color: #E67E22;
+        margin-bottom: 25px;
+        font-size: 1.3rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+    }
+    .dashboard-header {
+        color: #34495E;
+        border-bottom: 2px solid #E67E22;
+        padding-bottom: 5px;
+        margin-bottom: 15px;
     }
 </style>
 """, unsafe_allow_html=True)
 
+# Main Header
 st.markdown('<div class="main-title">⛏️ Underground Extraction & Stability Analyzer (UESA)</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">Comprehensive Geomechanics, Blasting, and Extraction Evaluation Suite</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">COMPREHENSIVE GEOMECHANICS & EXTRACTION SUITE</div>', unsafe_allow_html=True)
 
-# 3. Create SIX interactive Tabs
+# 3. INTERACTIVE TABS
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📋 UBC Method Selection", 
     "🧨 Blasting Models", 
@@ -36,32 +47,37 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "⛰️ Stope Stability"
 ])
 
-# --- TAB 1: UBC INPUTS AND RESULTS ---
+# --- TAB 1: SPLIT DASHBOARD (INPUTS & RESULTS) ---
 with tab1:
-    st.markdown("### 1. Input Parameters")
-    col1, col2, col3 = st.columns(3)
+    # Split the screen: 60% for inputs, 40% for results
+    col_inputs, col_results = st.columns([1.4, 1])
     
-    with col1:
-        st.markdown("#### 🌍 Orebody Characteristics")
-        general_shape = st.selectbox("General Shape", ["Massive", "Platty-Tabular", "Irregular"])
-        ore_thickness = st.selectbox("Ore Thickness", ["Very narrow (< 3 m)", "Narrow (3 - 10 m)", "Intermediate (10 - 30 m)", "Thick (30 - 100 m)", "Very thick (> 100 m)"])
-        ore_plunge = st.selectbox("Ore Plunge", ["Flat (< 20°)", "Intermediate (20 - 55°)", "Steep (> 55°)"])
-        grade_dist = st.selectbox("Grade Distribution", ["Uniform", "Gradational", "Erratic"])
-        depth = st.selectbox("Depth", ["Shallow (0 - 100 m)", "Intermediate (100 - 600 m)", "Deep (> 600 m)"])
+    with col_inputs:
+        st.markdown('<h3 class="dashboard-header">📥 Geological & Rock Mechanics Inputs</h3>', unsafe_allow_html=True)
+        
+        # Group inputs neatly using sub-columns
+        in_col1, in_col2 = st.columns(2)
+        
+        with in_col1:
+            st.markdown("**🌍 Orebody Characteristics**")
+            general_shape = st.selectbox("General Shape", ["Massive", "Platty-Tabular", "Irregular"])
+            ore_thickness = st.selectbox("Ore Thickness", ["Very narrow (< 3 m)", "Narrow (3 - 10 m)", "Intermediate (10 - 30 m)", "Thick (30 - 100 m)", "Very thick (> 100 m)"])
+            ore_plunge = st.selectbox("Ore Plunge", ["Flat (< 20°)", "Intermediate (20 - 55°)", "Steep (> 55°)"])
+            grade_dist = st.selectbox("Grade Distribution", ["Uniform", "Gradational", "Erratic"])
+            depth = st.selectbox("Depth", ["Shallow (0 - 100 m)", "Intermediate (100 - 600 m)", "Deep (> 600 m)"])
 
-    with col2:
-        st.markdown("#### 🪨 Rock Mass Rating (RMR)")
-        rmr_ore = st.selectbox("RMR (Ore Zone)", ["Very weak (0-20)", "Weak (20-40)", "Moderate (40-60)", "Strong (60-80)", "Very strong (80-100)"])
-        rmr_hw = st.selectbox("RMR (Hanging Wall)", ["Very weak (0-20)", "Weak (20-40)", "Moderate (40-60)", "Strong (60-80)", "Very strong (80-100)"])
-        rmr_fw = st.selectbox("RMR (Footwall)", ["Very weak (0-20)", "Weak (20-40)", "Moderate (40-60)", "Strong (60-80)", "Very strong (80-100)"])
+        with in_col2:
+            st.markdown("**🪨 Rock Mass Rating (RMR)**")
+            rmr_ore = st.selectbox("RMR (Ore Zone)", ["Very weak (0-20)", "Weak (20-40)", "Moderate (40-60)", "Strong (60-80)", "Very strong (80-100)"])
+            rmr_hw = st.selectbox("RMR (Hanging Wall)", ["Very weak (0-20)", "Weak (20-40)", "Moderate (40-60)", "Strong (60-80)", "Very strong (80-100)"])
+            rmr_fw = st.selectbox("RMR (Footwall)", ["Very weak (0-20)", "Weak (20-40)", "Moderate (40-60)", "Strong (60-80)", "Very strong (80-100)"])
+            
+            st.markdown("**🔨 Rock Substance Strength (RSS)**")
+            rss_ore = st.selectbox("RSS (Ore Zone)", ["Very weak (<5)", "Weak (5-10)", "Medium (10-15)", "Strong (>15)"])
+            rss_hw = st.selectbox("RSS (Hanging Wall)", ["Very weak (<5)", "Weak (5-10)", "Medium (10-15)", "Strong (>15)"])
+            rss_fw = st.selectbox("RSS (Footwall)", ["Very weak (<5)", "Weak (5-10)", "Medium (10-15)", "Strong (>15)"])
 
-    with col3:
-        st.markdown("#### 🔨 Rock Substance Strength")
-        rss_ore = st.selectbox("RSS (Ore Zone)", ["Very weak (<5)", "Weak (5-10)", "Medium (10-15)", "Strong (>15)"])
-        rss_hw = st.selectbox("RSS (Hanging Wall)", ["Very weak (<5)", "Weak (5-10)", "Medium (10-15)", "Strong (>15)"])
-        rss_fw = st.selectbox("RSS (Footwall)", ["Very weak (<5)", "Weak (5-10)", "Medium (10-15)", "Strong (>15)"])
-
-    # --- THE UBC SCORING MATRIX ---
+    # UBC Scoring Logic (Hidden from UI, processing backend)
     scoring_matrix = {
         'Block Caving': {
             'Depth': {'Deep (> 600 m)': 3, 'Intermediate (100 - 600 m)': 3, 'Shallow (0 - 100 m)': 2},
@@ -191,29 +207,30 @@ with tab1:
         if not excluded:
             results.append({"Mining Method": method, "Score": total_score})
 
-    st.divider()
-    st.markdown("### 2. Recommendation Ranking")
-    
-    if results:
-        df_results = pd.DataFrame(results).sort_values(by="Score", ascending=False).reset_index(drop=True)
-        top_method = df_results.iloc[0]["Mining Method"]
-        top_score = df_results.iloc[0]["Score"]
+    # Results side of the dashboard
+    with col_results:
+        st.markdown('<h3 class="dashboard-header">📊 Real-Time Recommendations</h3>', unsafe_allow_html=True)
         
-        st.success(f"🏆 **Top Recommendation:** {top_method} (Score: {top_score})")
-        
-        col_chart, col_table = st.columns([2, 1])
-        
-        with col_chart:
-            st.bar_chart(df_results.set_index("Mining Method"), color="#E67E22")
+        if results:
+            df_results = pd.DataFrame(results).sort_values(by="Score", ascending=False).reset_index(drop=True)
+            top_method = df_results.iloc[0]["Mining Method"]
+            top_score = df_results.iloc[0]["Score"]
             
-        with col_table:
+            # Highlight top recommendation
+            st.success(f"### 🏆 Top Choice:\n**{top_method}** (Score: {top_score})")
+            
+            # Clean dataframe display
+            df_results.index += 1 # Make rank 1-based
             st.dataframe(
                 df_results.style.highlight_max(subset=['Score'], color='#2ECC71'), 
-                use_container_width=True,
-                hide_index=True
+                use_container_width=True
             )
-    else:
-        st.error("⚠️ All methods are excluded (-49 penalty hit) based on the current selections.")
+            
+            # Bar chart
+            st.bar_chart(df_results.set_index("Mining Method"), color="#E67E22")
+            
+        else:
+            st.error("⚠️ All methods are excluded (-49 penalty hit) based on the current selections.")
 
 
 # --- TAB 2: BLASTING MODELS ---
