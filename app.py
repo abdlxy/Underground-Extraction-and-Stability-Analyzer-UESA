@@ -26,13 +26,15 @@ st.markdown("""
 st.markdown('<div class="main-title">⛏️ UBC Mining Method Selection Tool</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Advanced evaluation dashboard based on the UBC methodology</div>', unsafe_allow_html=True)
 
-# 3. Create FIVE interactive Tabs
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+# 3. Create SEVEN interactive Tabs
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "📋 Input Parameters", 
     "📊 Results & Analysis", 
     "🧨 Blasting Models", 
     "📳 Vibration Control",
-    "🎯 Drill Pattern Design"
+    "🎯 Drill Pattern Design",
+    "🏛️ Pillar Design",
+    "⛰️ Stope Stability"
 ])
 
 # --- TAB 1: UBC INPUTS ---
@@ -359,3 +361,82 @@ with tab5:
             st.metric("1st Square Burden (Distance from empty hole)", f"{b1:.2f} m")
             st.metric("Max Production Hole Burden", f"{max_burden:.2f} m")
             st.metric("Recommended Spacing", f"{spacing:.2f} m")
+
+# --- TAB 6: PILLAR DESIGN ---
+with tab6:
+    st.markdown("### 🏛️ Pillar Design & Stability")
+    st.markdown("Calculate induced stresses (Tributary Area Theory) and pillar strength (Obert-Duvall) to determine the Factor of Safety (FOS).")
+    
+    col_p1, col_p2 = st.columns(2)
+    with col_p1:
+        depth_m = st.number_input("Depth of Cover (m)", 10.0, 3000.0, 500.0)
+        rock_density = st.number_input("Rock Density (t/m³)", 1.0, 5.0, 2.7, key="pillar_density")
+        extraction_ratio = st.slider("Extraction Ratio (%)", 10, 90, 75) / 100.0
+        pillar_width = st.number_input("Pillar Width (W in m)", 2.0, 50.0, 10.0)
+        pillar_height = st.number_input("Pillar Height (H in m)", 2.0, 50.0, 15.0)
+        ucs = st.number_input("Uniaxial Compressive Strength (UCS in MPa)", 10.0, 300.0, 150.0)
+
+    with col_p2:
+        # Calculate Vertical Stress and Pillar Stress
+        vertical_stress = depth_m * rock_density * 0.00981
+        pillar_stress = vertical_stress / (1 - extraction_ratio)
+
+        # Obert-Duvall Formula for hard rock pillars
+        pillar_strength = ucs * (0.778 + 0.222 * (pillar_width / pillar_height))
+        fos = pillar_strength / pillar_stress
+
+        st.info("#### Stress & Strength Results")
+        st.metric("Induced Pillar Stress", f"{pillar_stress:.1f} MPa")
+        st.metric("Estimated Pillar Strength", f"{pillar_strength:.1f} MPa")
+        st.metric("Factor of Safety (FOS)", f"{fos:.2f}")
+
+        if fos >= 1.4:
+            st.success("✅ **Stable:** FOS is above the standard industry threshold (1.4).")
+        elif fos >= 1.0:
+            st.warning("⚠️ **Marginal:** FOS is between 1.0 and 1.4. Pillar may experience localized yielding or scaling.")
+        else:
+            st.error("❌ **Unstable:** FOS is below 1.0. High risk of pillar failure.")
+
+# --- TAB 7: STOPE STABILITY ---
+with tab7:
+    st.markdown("### ⛰️ Stope Stability (Mathews Graph)")
+    st.markdown("Evaluate open stope surface stability using the Modified Stability Number (N') and Hydraulic Radius (HR).")
+
+    col_s1, col_s2, col_s3 = st.columns(3)
+    with col_s1:
+        st.markdown("**1. Modified Tunnelling Quality Index (Q')**")
+        rqd = st.number_input("RQD (%)", 10, 100, 75)
+        jn = st.number_input("Joint Set Number (Jn)", 0.5, 20.0, 9.0)
+        jr = st.number_input("Joint Roughness (Jr)", 0.5, 4.0, 1.5)
+        ja = st.number_input("Joint Alteration (Ja)", 0.75, 20.0, 1.0)
+        
+        q_prime = (rqd / jn) * (jr / ja)
+        st.info(f"**Calculated Q':** {q_prime:.2f}")
+
+    with col_s2:
+        st.markdown("**2. Stability Factors**")
+        factor_a = st.slider("Rock Stress Factor (A)", 0.1, 1.0, 1.0)
+        factor_b = st.slider("Joint Orientation Factor (B)", 0.2, 1.0, 0.2, step=0.01)
+        factor_c = st.slider("Gravity/Orientation Factor (C)", 2.0, 8.0, 5.0)
+
+        n_prime = q_prime * factor_a * factor_b * factor_c
+        st.success(f"**Modified Stability Number (N'):** {n_prime:.2f}")
+
+    with col_s3:
+        st.markdown("**3. Stope Geometry (Hydraulic Radius)**")
+        stope_length = st.number_input("Stope Strike Length (m)", 5.0, 100.0, 30.0)
+        stope_height = st.number_input("Stope Height (m)", 5.0, 100.0, 40.0)
+
+        hr = (stope_length * stope_height) / (2 * (stope_length + stope_height))
+        st.warning(f"**Hydraulic Radius (HR):** {hr:.2f} m")
+
+    st.divider()
+    st.markdown("#### 📉 Stability Assessment")
+    
+    # Mathematical boundary check approximating the Mathews Stability Graph zones
+    if n_prime > (hr * 2.5):
+        st.success("🟩 Based on empirical boundaries, this stope surface is likely **STABLE** without support.")
+    elif n_prime > (hr * 0.5):
+        st.warning("🟨 This surface is in the **TRANSITION ZONE**. Cable bolting or ground support is highly recommended.")
+    else:
+        st.error("🟥 This surface falls in the **CAVING ZONE**. Significant dilution or failure is expected. A redesign of the stope dimensions is required.")
